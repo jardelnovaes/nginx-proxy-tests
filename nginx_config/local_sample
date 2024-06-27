@@ -1,0 +1,34 @@
+  server {
+        listen               443 ssl;
+        server_name          nginx-proxy-tests
+        client_max_body_size 10M;
+
+        ssl_stapling            on;
+        ssl_stapling_verify     on;
+        ssl_certificate         /etc/nginx/certs/server.crt;
+        ssl_certificate_key     /etc/nginx/certs/server.key;
+        ssl_client_certificate  /etc/nginx/certs/company_xpto.crt;
+        #For test only, change it to a ca_certs files
+        ssl_trusted_certificate /etc/nginx/certs/company_xpto.crt;
+        ssl_verify_client       optional;
+
+        ssl_session_timeout 1d;
+        ssl_session_cache   shared:MySSL:10m;  # about 40000 sessions
+        ssl_session_tickets off;
+
+        if ($ssl_client_verify != SUCCESS) {
+           return 401;
+        }
+
+        #To custom
+        #error_page 495 496 497 /errorSSLClient.html;
+
+        location /test-cert-and-api-key {
+            proxy_set_header X-Forwarded-For $remote_addr;
+            proxy_set_header X-Forwarded-Host $host;
+            proxy_set_header X-Forwarded-Port $server_port;
+            proxy_set_header X-Forwarded-Protocol $scheme;
+
+            proxy_pass http://192.1.2.3:3012/with-api-key;
+        }
+  }
